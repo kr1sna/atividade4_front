@@ -12,7 +12,7 @@ export function useDataFetching() {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await axios.get('https://server-06z2.onrender.com/data')
+      const response = await axios.get('https://api-kf.onrender.com/data')
       
       const dataWithTimestamps = response.data.map((point) => ({
         ...point,
