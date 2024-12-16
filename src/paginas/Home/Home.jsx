@@ -6,7 +6,7 @@ export default function Home() {
   const navigate = useNavigate();
   
   const pages = [
-    { name: 'Gráficos', path: '/graphs' },
+    { name: 'Cenários', path: '/scenarios' },
     { name: 'Dados', path: '/data' }
   ];
 
@@ -17,7 +17,7 @@ export default function Home() {
           <h1 className="main-title">Welcome to Dashboard</h1>
           <p className="subtitle">Select a page to view</p>
         
-          <div className="button-grid">
+          <div className="button-grid grid-cols-3">
             {pages.map((page) => (
               <button
                 key={page.path}

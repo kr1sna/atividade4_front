@@ -1,6 +1,6 @@
 import React from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 
 export function useDataFetching() {
@@ -14,12 +14,16 @@ export function useDataFetching() {
     try {
       const response = await axios.get('https://api-kf.onrender.com/data')
       
-      const dataWithTimestamps = response.data.map((point) => ({
+      const dataWithTimestamps = response.data.allData.map((point) => ({
         ...point,
-        timestamp: new Date(point.timestamp).toLocaleString('en-US', { 
+        timestamp: new Date(point.createdAt).toLocaleString('en-US', { 
             dateStyle: 'medium',
             timeStyle: 'medium'
-          })
+          }),
+        temperature: point.temperature,
+        humidity: point.humidity,
+        luminosity: point.luminosity,
+        rssi: point.rssi
       }))
       
       setData(dataWithTimestamps)
@@ -33,9 +37,43 @@ export function useDataFetching() {
 
   useEffect(() => {
     fetchData()
+    const intervalId = setInterval(fetchData, 60000) // Refresh every minute
+    return () => clearInterval(intervalId)
   }, [])
 
   return { data, isLoading, error, fetchData }
+}
+
+export function useFlexibleDataFetching(url, transformData) {
+  const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(url);
+
+      // Transform data using the provided function
+      const formattedData = transformData(response.data.data);
+
+      setData(formattedData);
+    } catch (err) {
+      console.error('Error details:', err);
+      setError(`An error occurred while fetching data: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [url, transformData]);
+
+  useEffect(() => {
+    fetchData();
+    const intervalId = setInterval(fetchData, 60000); // Refresh every minute
+    return () => clearInterval(intervalId);
+  }, [fetchData]); // Re-fetch data if the URL changes
+
+  return { data, isLoading, error, fetchData };
 }
 
 export function DataChart({ title, dataKey, color, data }) {
@@ -47,8 +85,14 @@ export function DataChart({ title, dataKey, color, data }) {
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="timestamp" />
-            <YAxis />
-            <Tooltip />
+            <YAxis 
+              type="number" 
+              domain={[-130, -100]} 
+              label={{ value: 'RSSI (dBm)', angle: -90, position: 'insideLeft' }}
+            />
+            <Tooltip 
+              formatter={(value, name) => [value + ' dBm', 'RSSI']}
+            />
             <Line type="monotone" dataKey={dataKey} stroke={color} />
           </LineChart>
         </ResponsiveContainer>

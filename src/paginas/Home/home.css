@@ -35,6 +35,14 @@
   justify-content: center; /* Center the grid */
   margin: 0 auto; /* Center the container */
 }
+
+.button-grid-2 {
+  display: grid; /* Grid layout */
+  grid-auto-flow: column; /* Force items into a single row */
+  grid-auto-columns: minmax(150px, 300px); /* Adjust button sizes */
+  gap: 1.5rem; /* Add spacing between buttons */
+  justify-content: center;
+}
   
 .nav-button {
   padding: 1.5rem;
